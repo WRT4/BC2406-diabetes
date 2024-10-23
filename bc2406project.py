@@ -1,9 +1,3 @@
-# Install libraries
-!pip install numpy
-!pip install pandas
-!pip install sklearn
-!pip install imblearn
-
 # Import the libraries
 import numpy as np
 import pandas as pd
