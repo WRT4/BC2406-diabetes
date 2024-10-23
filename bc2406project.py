@@ -115,7 +115,7 @@ columns = ["Age", "Gender"] + questions
 response_df = pd.DataFrame([responses], columns=columns)
 
 # Display the collected data (optional)
-st.write("Collected Responses:", response_df)
+# st.write("Collected Responses:", response_df)
 
 # Function to interpret model results
 def resultstring(arr):
