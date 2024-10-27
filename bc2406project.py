@@ -12,7 +12,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from imblearn.over_sampling import SMOTE
 
-df = pd.read_csv("data/diabetes_data_upload.csv")
+df = pd.read_csv("diabetes_data_upload.csv")
 # Remove duplicates
 data_cleaned = df.drop_duplicates()
 
@@ -24,7 +24,8 @@ gender_encoder = LabelEncoder()
 data_cleaned['Gender'] = gender_encoder.fit_transform(data_cleaned['Gender'])
 
 for column in data_cleaned.columns:
-    if data_cleaned[column].dtype == 'object' and column != 'Gender':  # Skip encoding 'Gender' as we encoded it manually
+    if data_cleaned[
+        column].dtype == 'object' and column != 'Gender':  # Skip encoding 'Gender' as we encoded it manually
         data_cleaned[column] = label_encoder.fit_transform(data_cleaned[column])
 
 # Separate Female and Male data
@@ -38,7 +39,6 @@ y_female = female_data['class']
 # Apply SMOTE to only the Female group
 smote = SMOTE(random_state=9)
 X_resampled_female, y_resampled_female = smote.fit_resample(X_female, y_female)
-
 
 # Recombine Female and Male data
 X_resampled = pd.concat([X_resampled_female, male_data.drop('class', axis=1)], axis=0)
@@ -63,10 +63,12 @@ rf_model = RandomForestClassifier(random_state=9)
 # Train the model on the training data
 rf_model.fit(X_train, y_train)
 
+
 # Function to collect user input
 def get_yes_no_input(prompt):
     response = st.radio(prompt, ('No', 'Yes'))
     return 1 if response == 'Yes' else 0
+
 
 # Title for the Streamlit App
 st.title("Diabetes Prediction")
@@ -79,14 +81,12 @@ age = st.number_input("What is your age this year?", min_value=0, max_value=120,
 
 gender = st.selectbox("What is your sex assigned at birth?", options=["Male", "Female"])
 
-
 # List of questions (yes/no)
 questions = [
     "Polyuria", "Polydipsia", "sudden weight loss", "weakness",
     "Polyphagia", "Genital thrush", "visual blurring", "Itching", "Irritability",
     "delayed healing", "partial paresis", "muscle stiffness", "Alopecia", "Obesity"
 ]
-
 
 # Collect responses for the symptoms
 responses = {"Age": age, "Gender": 1 if gender == 'Male' else 0}
@@ -103,8 +103,10 @@ responses["visual blurring"] = get_yes_no_input("Do you have blurry vision?")
 responses["Itching"] = get_yes_no_input("Do you itch often thoughout the body, especially in the lower legs?")
 responses["Irritability"] = get_yes_no_input("Do you have irritability and mood swings?")
 responses["delayed healing"] = get_yes_no_input("Do your wounds heal slower than before?")
-responses["partial paresis"] = get_yes_no_input("Do you have partial paralysis where you are unable to control some muscles?")
-responses["muscle stiffness"] = get_yes_no_input("Do you have muscle stiffness or a feeling of pain or tightness in your muscles?")
+responses["partial paresis"] = get_yes_no_input(
+    "Do you have partial paralysis where you are unable to control some muscles?")
+responses["muscle stiffness"] = get_yes_no_input(
+    "Do you have muscle stiffness or a feeling of pain or tightness in your muscles?")
 responses["Alopecia"] = get_yes_no_input("Do you have Alopecia or hair loss?")
 responses["Obesity"] = get_yes_no_input("Do you have obesity?")
 
@@ -117,6 +119,7 @@ response_df = pd.DataFrame([responses], columns=columns)
 # Display the collected data (optional)
 # st.write("Collected Responses:", response_df)
 
+
 # Function to interpret model results
 def resultstring(arr):
     if arr[0] == 1:
@@ -126,21 +129,29 @@ def resultstring(arr):
     else:
         return "Error"
 
+
 # Simulate model predictions (replace these with actual model predictions)
 # Predict with Logistic Regression
 log_reg_pred = log_reg.predict(response_df)
+# Predict probabilities for each class
+log_reg_probs = log_reg.predict_proba(response_df)
 
 # Predict with Decision Tree
 cart_pred = cart_model.predict(response_df)
+cart_pred_probs = cart_model.predict_proba(response_df)
 
 # Predict with Random Forest
 rf_pred = rf_model.predict(response_df)
+rf_pred_probs = rf_model.predict_proba(response_df)
+# Enforcing float format with one decimal place explicitly
+rf_pred_probs_formatted = ["{:.1f}".format(prob) for prob in np.round(rf_pred_probs[:, 1] * 100, 1)]
+
 
 # Display predictions
 st.subheader("Predictions")
-st.write("Logistic Regression Prediction: " + resultstring(log_reg_pred))
-st.write("Decision Tree Prediction: " + resultstring(cart_pred))
-st.write("Random Forest Prediction: " + resultstring(rf_pred))
+st.write("Logistic Regression Prediction: " + resultstring(log_reg_pred) + "; There is a " + str(np.round((log_reg_probs[:, 1] * 100),1)[0]) + "% chance of you having diabetes.")
+st.write("Decision Tree Prediction: " + resultstring(cart_pred) + "; There is a " + str(np.round((cart_pred_probs[:, 1] * 100),1)[0]) + "% chance of you having diabetes.")
+st.write("Random Forest Prediction: " + resultstring(rf_pred) + "; There is a " + str(rf_pred_probs_formatted[0]) + "% chance of you having diabetes.")
 
 # If any model predicts positive, recommend visiting a doctor
 num_of_positve = log_reg_pred[0] + cart_pred[0] + rf_pred[0]
