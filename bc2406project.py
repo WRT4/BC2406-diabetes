@@ -12,7 +12,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from imblearn.over_sampling import SMOTE
 
-df = pd.read_csv("diabetes_data_upload.csv")
+df = pd.read_csv("data/diabetes_data_upload.csv")
 # Remove duplicates
 data_cleaned = df.drop_duplicates()
 
