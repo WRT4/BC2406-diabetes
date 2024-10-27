@@ -147,11 +147,14 @@ rf_pred_probs = rf_model.predict_proba(response_df)
 rf_pred_probs_formatted = ["{:.1f}".format(prob) for prob in np.round(rf_pred_probs[:, 1] * 100, 1)]
 
 
+avg_prob = (log_reg_probs[:, 1] * 100 + cart_pred_probs[:, 1] * 100 + rf_pred_probs[:, 1] * 100)/3
+
 # Display predictions
 st.subheader("Predictions")
-st.write("Logistic Regression Prediction: " + resultstring(log_reg_pred) + "; There is a " + str(np.round((log_reg_probs[:, 1] * 100),1)[0]) + "% chance of you having diabetes.")
-st.write("Decision Tree Prediction: " + resultstring(cart_pred) + "; There is a " + str(np.round((cart_pred_probs[:, 1] * 100),1)[0]) + "% chance of you having diabetes.")
-st.write("Random Forest Prediction: " + resultstring(rf_pred) + "; There is a " + str(rf_pred_probs_formatted[0]) + "% chance of you having diabetes.")
+st.write("Logistic Regression Prediction: " + resultstring(log_reg_pred))
+st.write("Decision Tree Prediction: " + resultstring(cart_pred))
+st.write("Random Forest Prediction: " + resultstring(rf_pred))
+st.write("There is a " + str(round(avg_prob[0],1)) + "% chance of you having diabetes.")
 
 # If any model predicts positive, recommend visiting a doctor
 num_of_positve = log_reg_pred[0] + cart_pred[0] + rf_pred[0]
