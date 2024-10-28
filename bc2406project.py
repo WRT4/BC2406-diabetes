@@ -187,7 +187,7 @@ responses["Obesity"] = get_yes_no_input("Do you have obesity?")
 
 # Define column headings
 columns = ["Age", "Gender"] + questions
-columns2 = [X_train3.columns]
+columns2 = list(X_train3.columns)
 
 
 # Display the collected data (optional)
