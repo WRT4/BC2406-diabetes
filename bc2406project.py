@@ -12,72 +12,74 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from imblearn.over_sampling import SMOTE
 
-df = pd.read_csv("data/diabetes_data_upload.csv")
-df2 = pd.read_csv("data/diabetes_binary_5050split_health_indicators_BRFSS2015.csv")
-# Remove duplicates
-data_cleaned = df.drop_duplicates()
 
-# Encode categorical variables
-label_encoder = LabelEncoder()
+# Cache data loading and preprocessing
+@st.cache_data
+def load_and_preprocess_data():
+    df = pd.read_csv("data/diabetes_data_upload.csv")
+    df2 = pd.read_csv("data/diabetes_binary_5050split_health_indicators_BRFSS2015.csv")
 
-# Store original gender labels for post-SMOTE inspection
-gender_encoder = LabelEncoder()
-data_cleaned['Gender'] = gender_encoder.fit_transform(data_cleaned['Gender'])
+    # Remove duplicates and encode categorical variables
+    data_cleaned = df.drop_duplicates()
+    label_encoder = LabelEncoder()
+    gender_encoder = LabelEncoder()
+    data_cleaned['Gender'] = gender_encoder.fit_transform(data_cleaned['Gender'])
 
-for column in data_cleaned.columns:
-    if data_cleaned[
-        column].dtype == 'object' and column != 'Gender':  # Skip encoding 'Gender' as we encoded it manually
-        data_cleaned[column] = label_encoder.fit_transform(data_cleaned[column])
+    for column in data_cleaned.columns:
+        if data_cleaned[column].dtype == 'object' and column != 'Gender':
+            data_cleaned[column] = label_encoder.fit_transform(data_cleaned[column])
 
-# Separate Female and Male data
-female_data = data_cleaned[data_cleaned['Gender'] == gender_encoder.transform(['Female'])[0]]
-male_data = data_cleaned[data_cleaned['Gender'] == gender_encoder.transform(['Male'])[0]]
+    # Apply SMOTE to only the Female group
+    female_data = data_cleaned[data_cleaned['Gender'] == gender_encoder.transform(['Female'])[0]]
+    male_data = data_cleaned[data_cleaned['Gender'] == gender_encoder.transform(['Male'])[0]]
+    X_female = female_data.drop('class', axis=1)
+    y_female = female_data['class']
 
-# Separate features (X) and target (y) for SMOTE
-X_female = female_data.drop('class', axis=1)
-y_female = female_data['class']
+    smote = SMOTE(random_state=9)
+    X_resampled_female, y_resampled_female = smote.fit_resample(X_female, y_female)
 
-# Apply SMOTE to only the Female group
-smote = SMOTE(random_state=9)
-X_resampled_female, y_resampled_female = smote.fit_resample(X_female, y_female)
+    # Recombine Female and Male data
+    X_resampled = pd.concat([X_resampled_female, male_data.drop('class', axis=1)], axis=0)
+    y_resampled = pd.concat([y_resampled_female, male_data['class']], axis=0)
 
-# Recombine Female and Male data
-X_resampled = pd.concat([X_resampled_female, male_data.drop('class', axis=1)], axis=0)
-y_resampled = pd.concat([y_resampled_female, male_data['class']], axis=0)
+    # Process second dataset
+    numerical_columns = ['BMI', 'MentHlth', 'PhysHlth']
+    df2[df2.columns.difference(numerical_columns)] = df2[df2.columns.difference(numerical_columns)].astype("category")
+    unimportant_variables = ['NoDocbcCost', 'HvyAlcoholConsump', 'CholCheck', 'Veggies', 'Smoker', 'Stroke',
+                             'HeartDiseaseorAttack', 'Fruits', 'AnyHealthcare', 'PhysActivity']
+    df2.drop(columns=unimportant_variables, inplace=True)
 
-# Don't split the resampled data into training and testing sets anymore
+    X_train3 = df2[df2.columns.difference(["Diabetes_binary"])]
+    y_train3 = df2["Diabetes_binary"]
 
-# Initialize and train the logistic regression model
-log_reg = LogisticRegression(max_iter=1000)
-log_reg.fit(X_resampled, y_resampled)
+    return X_resampled, y_resampled, X_train3, y_train3, gender_encoder
 
-# Initialize the DecisionTreeClassifier (CART)
-cart_model = DecisionTreeClassifier(max_depth=2, random_state=9)
 
-# Train the model on the training data
-cart_model.fit(X_resampled, y_resampled)
+# Cache model training
+@st.cache_resource
+def train_models(X_resampled, y_resampled, X_train3, y_train3):
+    # Train logistic regression, decision tree, and random forest models
+    log_reg = LogisticRegression(max_iter=1000)
+    log_reg.fit(X_resampled, y_resampled)
 
-# Initialize the RandomForestClassifier
-rf_model = RandomForestClassifier(random_state=9)
+    cart_model = DecisionTreeClassifier(max_depth=2, random_state=9)
+    cart_model.fit(X_resampled, y_resampled)
 
-# Train the model on the training data
-rf_model.fit(X_resampled, y_resampled)
+    rf_model = RandomForestClassifier(random_state=9)
+    rf_model.fit(X_resampled, y_resampled)
 
-numerical_columns = ['BMI', 'MentHlth', 'PhysHlth']
-df2[df2.columns.difference(numerical_columns)] = df2[df2.columns.difference(numerical_columns)].astype("category")
-unimportant_variables = ['NoDocbcCost', 'HvyAlcoholConsump', 'CholCheck', 'Veggies', 'Smoker', 'Stroke',
-                         'HeartDiseaseorAttack', 'Fruits', 'AnyHealthcare', 'PhysActivity']
-df2.drop(columns=unimportant_variables, inplace=True)
+    cart_model2 = DecisionTreeClassifier(max_depth=6, random_state=9)
+    cart_model2.fit(X_train3, y_train3)
 
-# Split the data into X and y
-X_train3 = df2[df2.columns.difference(["Diabetes_binary"])]
-y_train3 = df2["Diabetes_binary"]
+    rf_model2 = RandomForestClassifier(max_depth=10, random_state=9)
+    rf_model2.fit(X_train3, y_train3)
 
-cart_model2 = DecisionTreeClassifier(max_depth=6, random_state=9)
-cart_model2.fit(X_train3, y_train3)
+    return log_reg, cart_model, rf_model, cart_model2, rf_model2
 
-rf_model2 = RandomForestClassifier(max_depth=10, random_state=9)
-rf_model2.fit(X_train3, y_train3)
+
+# Load data and train models only once
+X_resampled, y_resampled, X_train3, y_train3, gender_encoder = load_and_preprocess_data()
+log_reg, cart_model, rf_model, cart_model2, rf_model2 = train_models(X_resampled, y_resampled, X_train3, y_train3)
 
 
 # Function to collect user input
