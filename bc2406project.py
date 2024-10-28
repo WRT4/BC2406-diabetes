@@ -162,7 +162,8 @@ income_options = {
     "Less than $25,000 ($20,000 to less than $25,000)": 4,
     "Less than $35,000 ($25,000 to less than $35,000)": 5,
     "Less than $50,000 ($35,000 to less than $50,000)": 6,
-    "Less than $75,000 ($50,000 to less than $75,000)": 8,
+    "Less than $75,000 ($50,000 to less than $75,000)": 7,
+    "$75,000 or more": 8,
     "Don't know/Not sure": np.nan
 }
 selected_option2 = st.selectbox(label="Select your income level:", options=list(income_options.keys()))
