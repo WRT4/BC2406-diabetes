@@ -134,7 +134,7 @@ weight = st.number_input("What is your weight in kg?", step=0.1)
 responses2["BMI"] = weight / (height * height)
 responses2["HighBP"] = get_yes_no_input2("Do you have high blood pressure?")
 responses2["HighChol"] = get_yes_no_input2("Do you have high cholestrol?")
-gen = "Would you say that in general your health is: 1 = excellent 2 = very good 3 = good 4 = fair 5 = poor"
+gen = "Would you say that in general your health is: 1 = Excellent 2 = Very Good 3 = Good 4 = Fair 5 = Poor"
 responses2["GenHlth"] = st.slider(label=gen, min_value=1, max_value=5, step=1)
 ment = "In the last 30 days, roughly how many days did you have poor mental health?"
 responses2["MentHlth"] = st.number_input(label=ment, min_value=0, max_value=30, step=1)
