@@ -13,6 +13,7 @@ from sklearn.ensemble import RandomForestClassifier
 from imblearn.over_sampling import SMOTE
 
 df = pd.read_csv("data/diabetes_data_upload.csv")
+df2 = pd.read_csv("data/diabetes_binary_5050split_health_indicators_BRFSS2015.csv")
 # Remove duplicates
 data_cleaned = df.drop_duplicates()
 
@@ -44,30 +45,55 @@ X_resampled_female, y_resampled_female = smote.fit_resample(X_female, y_female)
 X_resampled = pd.concat([X_resampled_female, male_data.drop('class', axis=1)], axis=0)
 y_resampled = pd.concat([y_resampled_female, male_data['class']], axis=0)
 
-# Split the resampled data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.3, random_state=9)
+# Don't split the resampled data into training and testing sets anymore
 
 # Initialize and train the logistic regression model
 log_reg = LogisticRegression(max_iter=1000)
-log_reg.fit(X_train, y_train)
+log_reg.fit(X_resampled, y_resampled)
 
 # Initialize the DecisionTreeClassifier (CART)
 cart_model = DecisionTreeClassifier(max_depth=2, random_state=9)
 
 # Train the model on the training data
-cart_model.fit(X_train, y_train)
+cart_model.fit(X_resampled, y_resampled)
 
 # Initialize the RandomForestClassifier
 rf_model = RandomForestClassifier(random_state=9)
 
 # Train the model on the training data
-rf_model.fit(X_train, y_train)
+rf_model.fit(X_resampled, y_resampled)
+
+numerical_columns = ['BMI', 'MentHlth', 'PhysHlth']
+df2[df2.columns.difference(numerical_columns)] = df2[df2.columns.difference(numerical_columns)].astype("category")
+unimportant_variables = ['NoDocbcCost', 'HvyAlcoholConsump', 'CholCheck', 'Veggies', 'Smoker', 'Stroke',
+                         'HeartDiseaseorAttack', 'Fruits', 'AnyHealthcare', 'PhysActivity']
+df2.drop(columns=unimportant_variables, inplace=True)
+
+# Split the data into X and y
+X_train3 = df2[df2.columns.difference(["Diabetes_binary"])]
+y_train3 = df2["Diabetes_binary"]
+
+cart_model2 = DecisionTreeClassifier(max_depth=6, random_state=9)
+cart_model2.fit(X_train3, y_train3)
+
+rf_model2 = RandomForestClassifier(max_depth=10, random_state=9)
+rf_model2.fit(X_train3, y_train3)
 
 
 # Function to collect user input
 def get_yes_no_input(prompt):
     response = st.radio(prompt, ('No', 'Yes'))
     return 1 if response == 'Yes' else 0
+
+
+def get_yes_no_input2(prompt):
+    response = st.radio(prompt, ('No', 'Yes', "Not sure"))
+    if response == 'Yes':
+        return 1
+    elif response == 'No':
+        return 0
+    else:
+        return np.nan
 
 
 # Title for the Streamlit App
@@ -91,8 +117,54 @@ questions = [
 # Collect responses for the symptoms
 responses = {"Age": age, "Gender": 1 if gender == 'Male' else 0}
 
+if age >= 80:
+    age_input = 13
+elif 18 <= age < 80:
+    age_input = (age - 18) // 5 + 1
+else:
+    age_input = np.nan
+responses2 = {"Age": age_input, "Sex": 1 if gender == 'Male' else 0}
+
 st.subheader("Please answer these questions to the best of your ability. If you are unsure, visit the doctor.")
 
+height = st.number_input("What is your height in cm?", step=1, min_value=1) / float(100)
+weight = st.number_input("What is your weight in kg?", step=0.1)
+responses2["BMI"] = weight / (height * height)
+responses2["HighBP"] = get_yes_no_input2("Do you have high blood pressure?")
+responses2["HighChol"] = get_yes_no_input2("Do you have high cholestrol?")
+gen = "Would you say that in general your health is: 1 = excellent 2 = very good 3 = good 4 = fair 5 = poor"
+responses2["GenHlth"] = st.slider(label=gen, min_value=1, max_value=5, step=1)
+ment = "In the last 30 days, roughly how many days did you have poor mental health?"
+responses2["MentHlth"] = st.number_input(label=ment, min_value=0, max_value=30, step=1)
+phys = "In the last 30 days, roughly how many days did you have physical illness or injury?"
+responses2["PhysHlth"] = st.number_input(label=phys, min_value=0, max_value=30, step=1)
+responses2["DiffWalk"] = get_yes_no_input("Do you have serious difficulty walking or climbing stairs?")
+# Define the options as a dictionary mapping description to integer
+education_options = {
+    "Never attended school or only kindergarten": 1,
+    "Grades 1 through 8 (Elementary)": 2,
+    "Grades 9 through 11 (Some high school)": 3,
+    "Grade 12 or GED (High school graduate)": 4,
+    "College 1 year to 3 years (Some college or technical school)": 5,
+    "College 4 years or more (College graduate)": 6
+}
+# Display the selectbox with the descriptions
+selected_option = st.selectbox(label="Select your education level:", options=list(education_options.keys()))
+# Get the corresponding integer
+responses2["Education"] = education_options[selected_option]
+
+income_options = {
+    "Less than $10,000": 1,
+    "Less than $15,000 ($10,000 to less than $15,000)": 2,
+    "Less than $20,000 ($15,000 to less than $20,000)": 3,
+    "Less than $25,000 ($20,000 to less than $25,000)": 4,
+    "Less than $35,000 ($25,000 to less than $35,000)": 5,
+    "Less than $50,000 ($35,000 to less than $50,000)": 6,
+    "Less than $75,000 ($50,000 to less than $75,000)": 8,
+    "Don't know/Not sure": np.nan
+}
+selected_option2 = st.selectbox(label="Select your income level:", options=list(income_options.keys()))
+responses2["Income"] = income_options[selected_option2]
 responses["Polyuria"] = get_yes_no_input("Do you have Polyuria (excessive Urine Production)?")
 responses["Polydipsia"] = get_yes_no_input("Do you have Polydipsia (excessive thirst)?")
 responses["sudden weight loss"] = get_yes_no_input("Do you have sudden weight loss?")
@@ -112,9 +184,8 @@ responses["Obesity"] = get_yes_no_input("Do you have obesity?")
 
 # Define column headings
 columns = ["Age", "Gender"] + questions
+columns2 = [X_train3.columns]
 
-# Convert responses dictionary to a DataFrame with column headings
-response_df = pd.DataFrame([responses], columns=columns)
 
 # Display the collected data (optional)
 # st.write("Collected Responses:", response_df)
@@ -130,38 +201,55 @@ def resultstring(arr):
         return "Error"
 
 
-# Simulate model predictions (replace these with actual model predictions)
-# Predict with Logistic Regression
-log_reg_pred = log_reg.predict(response_df)
-# Predict probabilities for each class
-log_reg_probs = log_reg.predict_proba(response_df)
+if st.button("Calculate"):
+    # Convert responses dictionary to a DataFrame with column headings
+    response_df = pd.DataFrame([responses], columns=columns)
+    response2_df = pd.DataFrame([responses2], columns=columns2)
 
-# Predict with Decision Tree
-cart_pred = cart_model.predict(response_df)
-cart_pred_probs = cart_model.predict_proba(response_df)
+    # Simulate model predictions (replace these with actual model predictions)
+    # Predict with Logistic Regression
+    log_reg_pred = log_reg.predict(response_df)
+    # Predict probabilities for each class
+    log_reg_probs = log_reg.predict_proba(response_df)
 
-# Predict with Random Forest
-rf_pred = rf_model.predict(response_df)
-rf_pred_probs = rf_model.predict_proba(response_df)
-# Enforcing float format with one decimal place explicitly
-rf_pred_probs_formatted = ["{:.1f}".format(prob) for prob in np.round(rf_pred_probs[:, 1] * 100, 1)]
+    # Predict with Decision Tree
+    cart_pred = cart_model.predict(response_df)
+    cart_pred_probs = cart_model.predict_proba(response_df)
+    cart_pred2 = cart_model2.predict(response2_df)
+    cart_pred_probs2 = cart_model2.predict_proba(response2_df)
 
+    # Predict with Random Forest
+    rf_pred = rf_model.predict(response_df)
+    rf_pred_probs = rf_model.predict_proba(response_df)
+    # Enforcing float format with one decimal place explicitly
+    rf_pred_probs_formatted = ["{:.1f}".format(prob) for prob in np.round(rf_pred_probs[:, 1] * 100, 1)]
 
-avg_prob = (log_reg_probs[:, 1] * 100 + cart_pred_probs[:, 1] * 100 + rf_pred_probs[:, 1] * 100)/3
+    rf_pred2 = rf_model2.predict(response2_df)
+    rf_pred_probs2 = rf_model2.predict_proba(response2_df)
+    # Enforcing float format with one decimal place explicitly
+    rf_pred_probs_formatted2 = ["{:.1f}".format(prob) for prob in np.round(rf_pred_probs2[:, 1] * 100, 1)]
 
-# Display predictions
-st.subheader("Predictions")
-st.write("Logistic Regression Prediction: " + resultstring(log_reg_pred))
-st.write("Decision Tree Prediction: " + resultstring(cart_pred))
-st.write("Random Forest Prediction: " + resultstring(rf_pred))
-st.write("There is a " + str(round(avg_prob[0],1)) + "% chance of you having diabetes.")
+    avg_prob = (log_reg_probs[:, 1] * 100 + cart_pred_probs[:, 1] * 100 + rf_pred_probs[:, 1] * 100) / 3
+    avg_prob2 = (cart_pred_probs2[:, 1] * 100 + rf_pred_probs2[:, 1] * 100) / 2
 
-# If any model predicts positive, recommend visiting a doctor
-num_of_positve = log_reg_pred[0] + cart_pred[0] + rf_pred[0]
-if num_of_positve > 1:
-    st.warning("Please visit the doctor!")
-else:
-    st.success("No immediate concerns.")
+    # Display predictions
+    st.subheader("Predictions")
+    st.header("Dataset 1:")
+    st.write("Logistic Regression Prediction: " + resultstring(log_reg_pred))
+    st.write("Decision Tree Prediction: " + resultstring(cart_pred))
+    st.write("Random Forest Prediction: " + resultstring(rf_pred))
+    st.write("There is a " + str(round(avg_prob[0], 1)) + "% chance of you having diabetes.")
+    st.header("Dataset 2:")
+    st.write("Decision Tree Prediction: " + resultstring(cart_pred2))
+    st.write("Random Forest Prediction: " + resultstring(rf_pred2))
+    st.write("There is a " + str(round(avg_prob2[0], 1)) + "% chance of you having diabetes.")
+
+    # If any model predicts positive, recommend visiting a doctor
+    num_of_positve = log_reg_pred[0] + cart_pred[0] + rf_pred[0] + cart_pred2[0] + rf_pred2[0]
+    if num_of_positve > 2:
+        st.warning("Please visit the doctor!")
+    else:
+        st.success("No immediate concerns.")
 
 st.markdown(
     """
