@@ -45,7 +45,7 @@ def load_and_preprocess_data():
     # Process second dataset
     numerical_columns = ['BMI', 'MentHlth', 'PhysHlth']
     df2[df2.columns.difference(numerical_columns)] = df2[df2.columns.difference(numerical_columns)].astype("category")
-    unimportant_variables = ['Smoker', 'Fruits', 'Stroke', 'AnyHealthcare', 'CholCheck', 'NoDocbcCost', 'Veggies']
+    unimportant_variables = ['Smoker', 'Fruits', 'Stroke', 'AnyHealthcare', 'CholCheck', 'NoDocbcCost', 'Veggies', 'Education']
     df2.drop(columns=unimportant_variables, inplace=True)
 
     X_train3 = df2[df2.columns.difference(["Diabetes_binary"])]
@@ -133,26 +133,23 @@ weight = st.number_input("What is your weight in kg?", step=0.1)
 responses2["BMI"] = weight / (height * height)
 responses2["HighBP"] = get_yes_no_input2("Do you have high blood pressure?")
 responses2["HighChol"] = get_yes_no_input2("Do you have high cholestrol?")
-gen = "Would you say that in general your health is: 1 = Excellent 2 = Very Good 3 = Good 4 = Fair 5 = Poor"
-responses2["GenHlth"] = st.slider(label=gen, min_value=1, max_value=5, step=1)
+gen = "Would you say that in general your health is:"
+gen_options = {
+    "Excellent": 1,
+    "Very Good": 2,
+    "Good": 3,
+    "Fair": 4,
+    "Poor": 5
+}
+selected_option1 = st.radio(label=gen, options=list(gen_options.keys()))
+responses2["GenHlth"] = gen_options[selected_option1]
 ment = "In the last 30 days, roughly how many days did you have poor mental health?"
 responses2["MentHlth"] = st.number_input(label=ment, min_value=0, max_value=30, step=1)
 phys = "In the last 30 days, roughly how many days did you have physical illness or injury?"
 responses2["PhysHlth"] = st.number_input(label=phys, min_value=0, max_value=30, step=1)
 responses2["DiffWalk"] = get_yes_no_input("Do you have serious difficulty walking or climbing stairs?")
 # Define the options as a dictionary mapping description to integer
-education_options = {
-    "Never attended school or only kindergarten": 1,
-    "Grades 1 through 8 (Elementary)": 2,
-    "Grades 9 through 11 (Some high school)": 3,
-    "Grade 12 or GED (High school graduate)": 4,
-    "College 1 year to 3 years (Some college or technical school)": 5,
-    "College 4 years or more (College graduate)": 6
-}
-# Display the selectbox with the descriptions
-selected_option = st.selectbox(label="Select your education level:", options=list(education_options.keys()))
-# Get the corresponding integer
-responses2["Education"] = education_options[selected_option]
+
 
 income_options = {
     "Less than $10,000": 1,
