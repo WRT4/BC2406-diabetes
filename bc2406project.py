@@ -70,7 +70,7 @@ def train_models(X_resampled, y_resampled, X_train3, y_train3):
     cart_model2 = DecisionTreeClassifier(max_depth=7, random_state=9)
     cart_model2.fit(X_train3, y_train3)
 
-    rf_model2 = RandomForestClassifier(max_depth=11, random_state=9)
+    rf_model2 = RandomForestClassifier(max_depth=9, random_state=9)
     rf_model2.fit(X_train3, y_train3)
 
     return log_reg, cart_model, rf_model, cart_model2, rf_model2
