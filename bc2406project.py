@@ -237,13 +237,13 @@ if st.button("Calculate"):
     avg_prob2 = (cart_pred_probs2[:, 1] * 100 + rf_pred_probs2[:, 1] * 100) / 2
 
     # Display predictions
-    st.subheader("Predictions")
-    st.header("Dataset 1:")
+    st.header("Predictions")
+    st.subheader("Dataset 1:")
     st.write("Logistic Regression Prediction: " + resultstring(log_reg_pred))
     st.write("Decision Tree Prediction: " + resultstring(cart_pred))
     st.write("Random Forest Prediction: " + resultstring(rf_pred))
     st.write("There is a " + str(round(avg_prob[0], 1)) + "% chance of you having diabetes.")
-    st.header("Dataset 2:")
+    st.subheader("Dataset 2:")
     st.write("Decision Tree Prediction: " + resultstring(cart_pred2))
     st.write("Random Forest Prediction: " + resultstring(rf_pred2))
     st.write("There is a " + str(round(avg_prob2[0], 1)) + "% chance of you having diabetes.")
