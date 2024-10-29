@@ -45,7 +45,7 @@ def load_and_preprocess_data():
     # Process second dataset
     numerical_columns = ['BMI', 'MentHlth', 'PhysHlth']
     df2[df2.columns.difference(numerical_columns)] = df2[df2.columns.difference(numerical_columns)].astype("category")
-    unimportant_variables = ['NoDocbcCost', 'AnyHealthcare', 'CholCheck']
+    unimportant_variables = ['Smoker', 'Fruits', 'Stroke', 'AnyHealthcare', 'CholCheck', 'NoDocbcCost', 'Veggies']
     df2.drop(columns=unimportant_variables, inplace=True)
 
     X_train3 = df2[df2.columns.difference(["Diabetes_binary"])]
@@ -167,16 +167,11 @@ income_options = {
 }
 selected_option2 = st.selectbox(label="Select your income level:", options=list(income_options.keys()))
 responses2["Income"] = income_options[selected_option2]
-responses2["Fruits"] = get_yes_no_input("Do you consume fruits 1 or more times a day?")
-responses2["Smoker"] = get_yes_no_input(
-    "Have you smoked at least 100 cigarettes in your entire life? [Note: 5 packs = 100 cigarettes]")
-responses2["Stroke"] = get_yes_no_input("Have you ever had a stroke?")
 responses2["HeartDiseaseorAttack"] = get_yes_no_input(
     "Do you have Coronary Heart Disease or have you ever had a heart attack?")
 responses2["PhysActivity"] = get_yes_no_input("Have you done any physical activity in the past 30 days?")
 responses2["HvyAlcoholConsump"] = get_yes_no_input(
     "Are you a heavy drinker? (>14 drinks per week for adult men and >7 drinks per week for adult women)")
-responses2["Veggies"] = get_yes_no_input("Do you consume veggies 1 or more times a day?")
 responses["Polyuria"] = get_yes_no_input("Do you have Polyuria (excessive Urine Production)?")
 responses["Polydipsia"] = get_yes_no_input("Do you have Polydipsia (excessive thirst)?")
 responses["sudden weight loss"] = get_yes_no_input("Do you have sudden weight loss?")
