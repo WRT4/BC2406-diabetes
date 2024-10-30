@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import SMOTENC
 
 
 # Cache data loading and preprocessing
@@ -35,8 +35,11 @@ def load_and_preprocess_data():
     X_female = female_data.drop('class', axis=1)
     y_female = female_data['class']
 
-    smote = SMOTE(random_state=9)
-    X_resampled_female, y_resampled_female = smote.fit_resample(X_female, y_female)
+    categorical_features = list(range(1, 16, 1))
+    # Apply SMOTE-NC to only the Female group
+    # Initialize SMOTE-NC with categorical feature indices
+    smote_nc = SMOTENC(categorical_features=categorical_features, random_state=9)
+    X_resampled_female, y_resampled_female = smote_nc.fit_resample(X_female, y_female)
 
     # Recombine Female and Male data
     X_resampled = pd.concat([X_resampled_female, male_data.drop('class', axis=1)], axis=0)
@@ -61,7 +64,7 @@ def train_models(X_resampled, y_resampled, X_train3, y_train3):
     log_reg = LogisticRegression(max_iter=1000)
     log_reg.fit(X_resampled, y_resampled)
 
-    cart_model = DecisionTreeClassifier(max_depth=2, random_state=9)
+    cart_model = DecisionTreeClassifier(random_state=9)
     cart_model.fit(X_resampled, y_resampled)
 
     rf_model = RandomForestClassifier(random_state=9)
