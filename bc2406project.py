@@ -235,20 +235,24 @@ if st.button("Calculate"):
 
     avg_prob = (log_reg_probs[:, 1] * 100 + cart_pred_probs[:, 1] * 100 + rf_pred_probs[:, 1] * 100) / 3
     avg_prob2 = (cart_pred_probs2[:, 1] * 100 + rf_pred_probs2[:, 1] * 100) / 2
-
+    avg_overall = (avg_prob + avg_prob2)/2
+    
     # Display predictions
     st.header("Predictions")
     st.subheader("Dataset 1:")
     st.write("Logistic Regression Prediction: " + resultstring(log_reg_pred))
     st.write("Decision Tree Prediction: " + resultstring(cart_pred))
     st.write("Random Forest Prediction: " + resultstring(rf_pred))
-    st.write("There is a " + str(round(avg_prob[0], 1)) + "% chance of you having diabetes.")
+    # st.write("There is a " + str(round(avg_prob[0], 1)) + "% chance of you having diabetes.")
     st.subheader("Dataset 2:")
     st.write("Decision Tree Prediction: " + resultstring(cart_pred2))
     st.write("Random Forest Prediction: " + resultstring(rf_pred2))
-    st.write("There is a " + str(round(avg_prob2[0], 1)) + "% chance of you having diabetes.")
-
-    # If any model predicts positive, recommend visiting a doctor
+    # st.write("There is a " + str(round(avg_prob2[0], 1)) + "% chance of you having diabetes.")
+    
+    st.subheader("Overall prediction: ")
+    st.write("There is a " + str(round(avg_overall[0], 1)) + "% chance of you having diabetes.")
+    
+    # If the majority of models predict positive, recommend visiting a doctor
     num_of_positve = log_reg_pred[0] + cart_pred[0] + rf_pred[0] + cart_pred2[0] + rf_pred2[0]
     if num_of_positve > 2:
         st.warning("Please visit the doctor!")
