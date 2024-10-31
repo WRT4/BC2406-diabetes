@@ -64,7 +64,7 @@ def train_models(X_resampled, y_resampled, X_train3, y_train3):
     log_reg = LogisticRegression(max_iter=1000)
     log_reg.fit(X_resampled, y_resampled)
 
-    cart_model = DecisionTreeClassifier(random_state=9)
+    cart_model = DecisionTreeClassifier(max_depth=4, random_state=9)
     cart_model.fit(X_resampled, y_resampled)
 
     rf_model = RandomForestClassifier(random_state=9)
