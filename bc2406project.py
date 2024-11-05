@@ -254,11 +254,12 @@ if st.button("Calculate"):
     
     # If the majority of models predict positive, recommend visiting a doctor
     num_of_positve = log_reg_pred[0] + cart_pred[0] + rf_pred[0] + cart_pred2[0] + rf_pred2[0]
-    if num_of_positve > 2:
+    if avg_overall[0] > 45:
         st.warning("Please visit the doctor!")
     else:
         st.success("No immediate concerns.")
-
+    if avg_prob2 > avg_prob:
+        st.warning("Please try to improve your lifestyle!")
 st.markdown(
     """
     <style>
