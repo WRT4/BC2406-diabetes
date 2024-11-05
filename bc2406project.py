@@ -258,7 +258,7 @@ if st.button("Calculate"):
         st.warning("Please visit the doctor!")
     else:
         st.success("No immediate concerns.")
-    if avg_prob2 > avg_prob:
+    if cart_pred2 or rd_pred2:
         st.warning("Please try to improve your lifestyle!")
 st.markdown(
     """
