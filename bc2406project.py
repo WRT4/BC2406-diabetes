@@ -256,10 +256,10 @@ if st.button("Calculate"):
     num_of_positve = log_reg_pred[0] + cart_pred[0] + rf_pred[0] + cart_pred2[0] + rf_pred2[0]
     if avg_overall[0] > 45:
         st.warning("Please visit the doctor!")
-    else:
-        st.success("No immediate concerns.")
     if cart_pred2 or rf_pred2:
         st.warning("Please try to improve your lifestyle!")
+    else:
+        st.success("No immediate concerns.")
 st.markdown(
     """
     <style>
